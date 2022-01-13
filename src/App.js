@@ -1,23 +1,51 @@
-import logo from './logo.svg';
+import { useEffect, useState } from 'react';
+import { fetchRandomQuotes } from './apis/quote';
+import { fetchRandomBgImage } from './apis/unsplash';
+import useInterval from './hooks/useInterval';
 import './App.css';
 
 function App() {
+  const [quote, setQuote] = useState(null);
+  const [image, setImage] = useState(null);
+
+  const response = useInterval(() =>
+    Promise.all([
+      fetchRandomQuotes(),
+      fetchRandomBgImage()
+    ]), 15000);
+
+  useEffect(() => {
+    if (response?.length) {
+      const quote = response[0];
+      const image = response[1];
+      setQuote(quote);
+      setImage(image);
+    }
+  }, [response])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const result = await Promise.all([
+        fetchRandomQuotes(),
+        fetchRandomBgImage()
+      ]);
+      const quote = result[0];
+      const image = result[1];
+      setQuote(quote);
+      setImage(image);
+    }
+
+    fetchData();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+    <div className="app" style={{backgroundImage: `url(${image?.urls?.full})`}}>
+      <div className="container">
+        <p>{quote?.content}</p>
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          {quote?.originator && <span>author: {quote?.originator.name}</span>}
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      </div>
     </div>
   );
 }
